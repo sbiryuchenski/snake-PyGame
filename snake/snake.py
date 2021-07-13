@@ -7,6 +7,7 @@ pygame.font.init()
 ver = "0.4.4"
 
 #1 Костыль. UP это ВНИЗ, а DOWN это я по ходу....
+#2 Блять, я теперь буду писать комментарии, обещаю
 
 
 ##########
@@ -139,6 +140,8 @@ orgasmlist = []
 for i in range(4):
     orgasmlist.append(pygame.mixer.Sound('sounds/GYM/orgasm'+str(i)+'.wav'))
 
+appleOrgasmList = [pygame.mixer.Sound('sounds/GYM/orgasm2.wav'), pygame.mixer.Sound('sounds/GYM/orgasm3.wav')] # Sound when takes a bonus 5 apples
+
 gymsoumdslist = []
 for i in range(12):
     gymsoumdslist.append(pygame.mixer.Sound('sounds/GYM/srandom'+str(i)+'.wav'))
@@ -156,6 +159,8 @@ run = True
 menu = True
 pause = False
 
+bonusTime = 1600 # Time of bonus collecting
+appleRealSize = 10 # Eating range of apple
 m=3000
 n=0
 seconder = False
@@ -167,6 +172,8 @@ animsparkles = 1
 gym = False
 g = False
 y = False
+d = False
+e = False
 mgym = False
 hello = True
 abouter = False
@@ -181,6 +188,8 @@ choisenew = True
 blind = False
 b = 0
 applecounter = 0
+
+DEV_MODE = False # Developer mode. Ввести dev во в меню. Змея становится бессмертной, змее проще попасть в яблоки, на достижение комбо даётся 5 секунд вместо 1,6 секунды в обычном режиме
 
 while run:
     n+=1
@@ -209,6 +218,17 @@ while run:
             if event.type == pygame.KEYDOWN and event.key == pygame.K_m:
                 if y:
                     mgym = True
+            #///////////////////////////DEVELOPER MODE//////////////////////////////
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_d:
+                d = True
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_e:
+                if d:
+                    e = True
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_v:
+                if e:
+                    DEV_MODE = True
+                    bonusTime = 5000
+                    appleRealSize = 25
             if event.type == pygame.KEYDOWN and event.key == pygame.K_DOWN and not exitask:
                 m+=1
                 notelist[n%50].play()
@@ -529,30 +549,32 @@ while run:
         
         #ONE PLAYER//////////////////////////////////////////////////////////////////////////////////////////////////
         else:
-            #die handling1
-            if len(snake) > 5:
-                for d in range(5, len(snake)):
-                    if(abs(snake[0][0] - snake[d][0]) < 1 and abs(snake[0][1] - snake[d][1]) < 1):
-                        alive = False
-                        booster = 0
-                        if gym:
-                            if played:
-                                orgasmlist[random.randint(0, 2)].play()
-                                played = False
-                        else:
-                            if played:
-                                auchlist[random.randint(0, 2)].play()
-                                played = False
-                        if score > bestscore:
-                            bestscore = score
-                            bestscoretext = fontsmall.render(str(bestscore), 1, WHITE)
-                            score = 0
+            if not DEV_MODE:
+                if not applebonus:
+                    #die handling1
+                    if len(snake) > 5:
+                        for d in range(5, len(snake)):
+                            if(abs(snake[0][0] - snake[d][0]) < 1 and abs(snake[0][1] - snake[d][1]) < 1):
+                                alive = False
+                                booster = 0
+                                if gym:
+                                    if played:
+                                        orgasmlist[random.randint(0, 2)].play()
+                                        played = False
+                                else:
+                                    if played:
+                                        auchlist[random.randint(0, 2)].play()
+                                        played = False
+                                if score > bestscore:
+                                    bestscore = score
+                                    bestscoretext = fontsmall.render(str(bestscore), 1, WHITE)
+                                    score = 0
 
 
     #appleeat handling
-            if (abs(snake[0][0] - applex) <= 10 and abs(snake[0][1] - appley) <= 10):
+            if (abs(snake[0][0] - applex) <= appleRealSize and abs(snake[0][1] - appley) <= appleRealSize):
                 if booster > 0:
-                    if (pygame.time.get_ticks() - starttics <= 1900):#1900  
+                    if (pygame.time.get_ticks() - starttics <= bonusTime):#1900  
                         booster+=1
                         starttics = pygame.time.get_ticks()
                         animtwox = 0
@@ -594,6 +616,8 @@ while run:
                     elif booster == 9:
                         for app in range(5):
                             applelist.append([random.randint(5, window-5), random.randint(5, window-5), True])
+                        if gym:
+                            appleOrgasmList[random.randint(0, 1)].play()
                         applebonus = True
                         booster = 0
                 if applebonus:
